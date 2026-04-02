@@ -7,7 +7,7 @@ if($token == ''){
     die("Invalid request");
 }
 
-// find user with token
+// find user with token uyttr
 $query = mysqli_query($conn, "SELECT * FROM users WHERE reset_token='$token'");
 
 if(mysqli_num_rows($query) == 0){
