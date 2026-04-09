@@ -45,18 +45,16 @@ text-decoration:none;
 }
 
 .menu{
-flex:1;
+/*flex:1;*/
 }
 
 .logout-btn{
-margin-top:auto;
 padding:12px;
 text-align:center;
 background:#2c5364;
 color:white;
 text-decoration:none;
 }
-
 .content{
 margin-left:200px;
 padding:20px;
@@ -117,7 +115,6 @@ text-decoration:none;
     <div class="menu">
         <a href="dashboard.php"></a>
         <a href="add-item.php"></a>
-        <a href="logout.php" class="logout-btn">Logout</a>
     </div>
     <a href="logout.php" class="logout-btn">Logout</a>
 </div>
@@ -133,31 +130,81 @@ text-decoration:none;
 <div class="gallery">
 
 <?php
+
+// Fetch items
 if($_SESSION['role'] == 'admin'){
     $q = mysqli_query($conn,"SELECT * FROM items");
-} else {
+}else{
     $user_email = $_SESSION['user'];
     $q = mysqli_query($conn,"SELECT * FROM items WHERE user_email='$user_email'");
 }
 
+// Separate horizontal and vertical
+$horizontal = [];
+$vertical = [];
+
 while($row = mysqli_fetch_assoc($q)){
+    if($row['layout_type'] == "horizontal"){
+        $horizontal[] = $row;
+    }else{
+        $vertical[] = $row;
+    }
+}
 
-$class = ($row['layout_type'] == "horizontal") ? "horizontal" : "vertical";
+$h = 0;
+$v = 0;
+$start = 'V'; // default
+
+if(count($horizontal) > 0 && count($vertical) > 0){
+    if($horizontal[0]['id'] < $vertical[0]['id']){
+        $start = 'H';
+    }else{
+        $start = 'V';
+    }
+}elseif(count($horizontal) > 0){
+    $start = 'H';
+}
+
+// Layout pattern: V V -> H -> V V -> H
+while($h < count($horizontal) || $v < count($vertical)){
+
+    if($start == 'V'){
+    for($i=0;$i<2;$i++){
+        if(isset($vertical[$v])){
+            $row = $vertical[$v++];
+            echo '
+            <div class="card vertical">
+                <img src="uploads/'.$row['image'].'">
+                <h3>'.$row['name'].'</h3>
+                <a href="delete.php?id='.$row['id'].'">
+                    <button>Delete</button>
+                </a>
+            </div>';
+        }
+    }
+    $start = 'H';
+}
+
+    // Then horizontal
+    if(isset($horizontal[$h])){
+        $row = $horizontal[$h++];
+        echo '
+        <div class="card horizontal">
+            <img src="uploads/'.$row['image'].'">
+            <h3>'.$row['name'].'</h3>
+            <a href="delete.php?id='.$row['id'].'">
+                <button>Delete</button>
+            </a>
+        </div>';
+        $start = 'V';
+    }
+
+}
+        
+
+
+
 ?>
-
-<div class="card <?php echo $class; ?>">
-
-<img src="uploads/<?php echo $row['image']; ?>">
-
-<h3><?php echo $row['name']; ?></h3>
-
-<a href="delete.php?id=<?php echo $row['id']; ?>">
-<button>Delete</button>
-</a>
-
-</div>
-
-<?php } ?>
 
 </div>
 
